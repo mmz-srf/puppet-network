@@ -247,7 +247,16 @@ Puppet::Type.type(:network_config).provide(:interfaces) do
     # Add onboot interfaces
     if (auto_interfaces = providers.select {|provider| provider.onboot == true })
       stanza = []
-      stanza << "auto " + auto_interfaces.map(&:name).sort.join(" ")
+      loopback_stanza = ''
+      interfacec_stanza = []
+      auto_interfaces.map(&:name).sort.each do |auto_interface|
+        if ( auto_interface == 'lo' )
+          loopback_stanza = auto_interface + ' '
+        else
+          interfacec_stanza << auto_interface
+        end
+      end
+      stanza << 'auto ' + loopback_stanza + interfacec_stanza.join(' ')
       contents << stanza.join("\n")
     end
 
