@@ -71,6 +71,7 @@ Puppet::Type.type(:network_route).provide(:routes) do
       # use the CIDR version of the target as :name
       cidr_target = "#{route[0]}/#{IPAddr.new(route[1]).to_i.to_s(2).count('1')}"
 
+      route_hash[cidr_target][:name] = cidr_target
       route_hash[cidr_target][:network] = route[0]
       route_hash[cidr_target][:netmask] = route[1]
       route_hash[cidr_target][:gateway] = route[2]
@@ -82,8 +83,8 @@ Puppet::Type.type(:network_route).provide(:routes) do
 
   # Generate an array of sections
   def self.format_file(filename, providers)
-    contents = []
-    contents << header
+    contents = {}
+    contents['header'] = header
 
     # Build routes
     providers.sort_by(&:name).each do |provider|
@@ -92,10 +93,11 @@ Puppet::Type.type(:network_route).provide(:routes) do
       raise Puppet::Error, "#{provider.name} is missing the required parameter 'gateway'." if provider.gateway.nil?
       raise Puppet::Error, "#{provider.name} is missing the required parameter 'interface'." if provider.interface.nil?
 
-      contents << "#{provider.network} #{provider.netmask} #{provider.gateway} #{provider.interface}\n"
+      cidr_target = "#{provider.network}/#{IPAddr.new(provider.netmask).to_i.to_s(2).count('1')}"
+      contents[cidr_target] = "#{provider.network} #{provider.netmask} #{provider.gateway} #{provider.interface}\n"
     end
 
-    contents.join
+    contents.values.join
   end
 
   def self.header
