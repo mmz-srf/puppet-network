@@ -7,7 +7,11 @@ Puppet::Type.newtype(:network_route) do
 
   IPV4_ADDRESS_REGEX = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/
 
-  newparam(:name) do
+  def name
+    self[:name] = "#{self[:network]}/#{IPAddr.new(self[:netmask]).to_i.to_s(2).count('1')}"
+  end
+
+  newparam(:unusednamevar) do
     isnamevar
     desc "The name of the network route"
   end
